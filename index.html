@@ -34,18 +34,22 @@
     <script src='./leaflet-ant-path/dist/leaflet-ant-path.js'>
     </script>
     <!-- Include the loading control -->
-        <link rel="stylesheet" href="./src/Control.Loading.css" />
-        <script src="./src/Control.Loading.js"></script>
+    <link rel="stylesheet" href="./src/Control.Loading.css" />
+    <script src="./src/Control.Loading.js">
+    </script>
     <style>
         html,
-		body {
-		    padding: 0;
-		    margin: 0;
-		}
-		html, body, #map {
-		    height: 100%;
-		    width: 100vw;
-		}
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+            width: 100vw;
+        }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 </head>
@@ -389,70 +393,73 @@
         return text;
     }
 
-    function show_result(result){
-    	var home = L.AwesomeMarkers.icon({markerColor: 'red',icon: 'home'});
-    	var nearest_station_result = nearest_station_checker(result.center);
-                if (nearest_station_result) {
-                    var closest_station = nearest_station_result[0]; //[id, name, addr, station_latlon, d]
-                    var route_text = nearest_station_result[1];
-                    if (result) {
-                        var popup_text = "所在地：" + result.name + "<br/>距離最近的GoStation：" + closest_station[1] + "<br/>" + route_text + "<br/><a href=\"https://wego.here.com/directions/drive//" + closest_station[3] + "?normal&avoid=tollroad,boatFerry,motorway,railFerry,carHOV\" target=\"_blank\">使用HERE導航至目的地</a>";
-                        if (marker) {
-                            marker.setLatLng(result.center, {
-                                icon: home
-                            }).setPopupContent(popup_text).openPopup();
-                        } else {
-                            marker = L.marker(result.center, {
-                                icon: home
-                            }).bindPopup(popup_text, {}).addTo(map).openPopup();
-                        }
-                    }
+    function show_result(result) {
+        var home = L.AwesomeMarkers.icon({
+            markerColor: 'red',
+            icon: 'home'
+        });
+        var nearest_station_result = nearest_station_checker(result.center);
+        if (nearest_station_result) {
+            var closest_station = nearest_station_result[0]; //[id, name, addr, station_latlon, d]
+            var route_text = nearest_station_result[1];
+            if (result) {
+                var popup_text = "所在地：" + result.name + "<br/>距離最近的GoStation：" + closest_station[1] + "<br/>" + route_text + "<br/><a href=\"https://wego.here.com/location/?map=" + closest_station[3] + ",15,&msg=" + closest_station[1] + "\" target=\"_blank\">使用HERE導航至目的地</a>";
+                if (marker) {
+                    marker.setLatLng(result.center, {
+                        icon: home
+                    }).setPopupContent(popup_text).openPopup();
                 } else {
-                    if (r) {
-                        if (marker) {
-                            marker.setLatLng(result.center, {
-                                icon: home
-                            }).setPopupContent("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").openPopup();
-                        } else {
-                            marker = L.marker(result.center, {
-                                icon: home
-                            }).bindPopup("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").addTo(map).openPopup();
-                        }
-                    }
+                    marker = L.marker(result.center, {
+                        icon: home
+                    }).bindPopup(popup_text, {}).addTo(map).openPopup();
                 }
+            }
+        } else {
+            if (r) {
+                if (marker) {
+                    marker.setLatLng(result.center, {
+                        icon: home
+                    }).setPopupContent("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").openPopup();
+                } else {
+                    marker = L.marker(result.center, {
+                        icon: home
+                    }).bindPopup("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").addTo(map).openPopup();
+                }
+            }
+        }
     }
 
     function geocode_and_find_station(loc) {
         geocoder.reverse(loc, map.options.crs.scale(map.getZoom()), function(results) {
             if (results.length > 0) {
                 var r = results[0];
-            show_result(r);
+                show_result(r);
             }
         })
     }
 
     var here_geocoder = L.Control.geocoder({
-    	geocoder: L.Control.Geocoder.here(),
-        defaultMarkGeocode: false,
-        position: 'topleft',
-        collapsed: false,
-        placeholder: 'Search Address to Find EV Station...',
-		    })
-		    .on('markgeocode', function(e) {
-		        show_result(e.geocode);
-		    })
-		    .addTo(map);
+            geocoder: L.Control.Geocoder.here(),
+            defaultMarkGeocode: false,
+            position: 'topleft',
+            collapsed: false,
+            placeholder: 'Search Address to Find EV Station...',
+        })
+        .on('markgeocode', function(e) {
+            show_result(e.geocode);
+        })
+        .addTo(map);
 
     map.on('contextmenu', function(e) {
         geocode_and_find_station(e.latlng);
     });
-
+    /*
     map.on('mousedown', function onMouseDown(e) {
 	pressTimer = window.setTimeout(function() {
 	        geocode_and_find_station(e.latlng);
 		},3000)
 	});
-
+	*/
     var loc;
 
     function loc_updater(lat, lon, radius, heading, speed) {
