@@ -187,7 +187,7 @@
                 var name = attrib['NAME'];
                 var addr = attrib['ADDR'];
                 var latlon = attrib['LATLON'].split(',');
-                var popup_text = name + '<br/>' + addr;
+                var popup_text = name + '<br/>' + addr + "<br/><a href=\"https://wego.here.com/location/?map=" + latlon + ",15,&msg=" + name + "\" target=\"_blank\">使用HERE導航至" + name + "</a>";
                 var green = L.AwesomeMarkers.icon({
                     markerColor: 'green',
                     prefix: 'fa',
