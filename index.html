@@ -37,6 +37,8 @@
     <link rel="stylesheet" href="./src/Control.Loading.css" />
     <script src="./src/Control.Loading.js">
     </script>
+    <script src="./src/leaflet_hash.js">
+    </script>
     <style>
         html,
         body {
@@ -76,6 +78,7 @@
         geocoder = L.Control.Geocoder.here(),
         marker;
 
+    var hash = new L.Hash(map);
     var here_maptile = L.tileLayer(
         'https://{s}.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=cht&ppi=320&pois&app_id=' + he_appid + '&app_code=' + he_appcode, {
             "attribution": copyright_text,
@@ -86,10 +89,7 @@
             "subdomains": ["1", "2", "3"]
         }).addTo(map);
 
-    var zl = map.getZoom();
-
     var xmlHttp;
-
     function httpGet(theUrl) {
         xmlHttp = new XMLHttpRequest();
         xmlHttp.open("GET", theUrl, false); // false for synchronous request
@@ -252,7 +252,7 @@
         setView: true,
         enableHighAccuracy: true
     });
-    var c_marker = L.circleMarker(map.getCenter(), {
+    var c_marker = L.circleMarker(map.getCenter(),{
         radius: 6,
         color: '#ff80d5',
         interactive: false
@@ -462,7 +462,7 @@
 	});
 	*/
     var loc;
-
+    /*
     function loc_updater(lat, lon, radius, heading, speed) {
         map.panTo([lat, lon]);
         var epoch = new Date().getTime();
@@ -497,7 +497,7 @@
                     setView: true,
                     watch: true,
                     enableHighAccuracy: true,
-                    timeout: 60000,
+                    timeout: 1000,
                     maximumAge: 0,
                     animate: true
                 });
@@ -523,7 +523,7 @@
         }]
     });
     animatedToggle.addTo(map);
-
+	*/
 
     if (ggr_marker_group.getLayers().length == 0) {
         cle_refresh();
