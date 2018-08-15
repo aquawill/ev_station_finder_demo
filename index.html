@@ -318,7 +318,7 @@
             }
             result_list.sort(sort_gfe_cunction).reverse();
             //console.log(result_list);
-            var here_matrix_url = 'https://matrix.route.api.here.com/routing/7.2/calculatematrix.json?mode=fastest%3Bcar&app_id=' + he_appid + '&app_code=' + he_appcode + '&start0=' + input_loc.lat + '%2C' + input_loc.lng + '&consumptionmodel=default'
+            var here_matrix_url = 'https://matrix.route.api.here.com/routing/7.2/calculatematrix.json?mode=fastest;car;traffic:enabled;motorway:-3&app_id=' + he_appid + '&app_code=' + he_appcode + '&start0=' + input_loc.lat + '%2C' + input_loc.lng + '&consumptionmodel=default'
             var candidate_list_length;
             if (result_list.length > 5) {
                 candidate_list_length = 5
@@ -332,6 +332,7 @@
             //console.log(here_matrix_url);
             var matrix_result = JSON.parse(httpGet(here_matrix_url));
             var closest_dest_list = [];
+            console.log(matrix_result["response"]["matrixEntry"]);
             for (i = 0; i < matrix_result["response"]["matrixEntry"].length; i++) {
                 var matrix_entity = matrix_result["response"]["matrixEntry"][i];
                 var destination_index = matrix_result["response"]["matrixEntry"][i]["destinationIndex"];
@@ -364,7 +365,7 @@
 
     function get_route(ori, dest) {
         var route_url = 'https://route.api.here.com/routing/7.2/calculateroute.json?';
-        var route_options = '&mode=fastest;car;traffic:enabled&departure=now&motorway=-4&language=zh-TW&routeattributes=sh&consumptionmodel=default';
+        var route_options = '&mode=fastest;car;traffic:enabled;motorway:-3&departure=now&language=zh-TW&routeattributes=sh&consumptionmodel=default';
         var wp0 = ori.lat + "," + ori.lng;
         var wp1 = dest.lat + "," + dest.lng;
         var req_url = route_url + 'app_id=' + he_appid + '&app_code=' + he_appcode + '&waypoint0=geo!' + wp0 + '&waypoint1=geo!' + wp1 + route_options;
