@@ -1,37 +1,23 @@
-## Welcome to GitHub Pages
+**Gogoro EV Station Finder**
 
-You can use the [editor on GitHub](https://github.com/aquawill/ev_station_finder_demo/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Station data source from Gogoro: https://www.gogoro.com/tw/
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Powered by Leaflet and HERE Location Services:
 
-### Markdown
+* Leaflet JS (Interactive Map)
+    * https://leafletjs.com/
+* HERE Map Tile API (Base Map Images)
+    * https://developer.here.com/documentation/map-tile/topics/guide.html
+* HERE Routing API
+    * Matrix (Nearest Calculation)
+    * Routing (Route Calculation)
+    * Isoline (Reachable Range Calculation)
+    * https://developer.here.com/documentation/routing/topics/request-constructing.html
+* HERE Customer Location Extension (Location Data Storage)
+    * https://developer.here.com/documentation/custom-location/topics/request-constructing.html
+* HERE Geofencing Extension (Determine Reachable Stations)
+    * https://developer.here.com/documentation/geofencing/topics/asset-distance-search-radius.html
+* HERE Geocoder / Reverse Geocoder API (Convert Between Address and Geo-location)
+    * https://developer.here.com/documentation/geocoder/topics/request-constructing.html
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/aquawill/ev_station_finder_demo/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+Discover more about HERE Location Solutions: https://developer.here.com/
