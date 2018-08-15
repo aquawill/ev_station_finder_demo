@@ -445,7 +445,13 @@
 
     map.on('contextmenu', function(e) {
         geocode_and_find_station(e.latlng);
-    })
+    });
+
+    map.on('mousedown', function onMouseDown(e) {
+	pressTimer = window.setTimeout(function() {
+	        geocode_and_find_station(e.latlng);
+		},3000)
+	});
 
     var loc;
 
