@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script>
+        L_PREFER_CANVAS = false;
+        L_NO_TOUCH = false;
+        L_DISABLE_3D = false;
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.3/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.3.3/dist/leaflet.js" integrity="sha512-tAGcCfR4Sc5ZP5ZoVz0quoZDYX5aCtEm/eu1KhSLj2c9eFrylXZknQYmxUssFaVJKvvc0dJQixhGjG2yXWiV9Q==" crossorigin="">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
+    </script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js">
+    </script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" />
+    <link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css" />
+    <link rel="stylesheet" href="./dist/Control.Geocoder.css" />
+    <script src="./dist/Control.Geocoder.js">
+    </script>
+    <script src="./leaflet.bouncemarker/bouncemarker.js">
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js">
+    </script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'>
+    </script>
+    <script src='./leaflet-ant-path/dist/leaflet-ant-path.js'>
+    </script>
+    <!-- Include the loading control -->
+        <link rel="stylesheet" href="./src/Control.Loading.css" />
+        <script src="./src/Control.Loading.js"></script>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <style>
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+        }
+    </style>
+
+    <style>
+        #map {
+            position: relative;
+            width: 100.0%;
+            height: 100.0%;
+            left: 0.0%;
+            top: 0.0%;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="folium-map" id="map"></div>
+
+</body>
+<script>
+    var bounds = null;
+
+    var he_appid = 'KymxRBvsVraBqbxy6gCt';
+    var he_appcode = 'LbNbmVAeiyg51Dbr2C_NOw';
+
+    var map = L.map('map', {
+            keyboard: true,
+            attributionControl: false,
+            crs: L.CRS.EPSG3857,
+            minZoom: 10,
+            loadingControl: true
+        }).setView([25.02634, 121.53477], 15),
+        geocoder = L.Control.Geocoder.here(),
+        marker;
+
+    var here_maptile = L.tileLayer(
+        'https://{s}.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=cht&ppi=320&pois&app_id=' + he_appid + '&app_code=' + he_appcode, {
+            "attribution": copyright_text,
+            "detectRetina": true,
+            "maxZoom": 20,
+            "minZoom": 1,
+            "noWrap": false,
+            "subdomains": ["1", "2", "3"]
+        }).addTo(map);
+
+    var zl = map.getZoom();
+
+    var xmlHttp;
+
+    function httpGet(theUrl) {
+        xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", theUrl, false); // false for synchronous request
+        xmlHttp.send(null);
+        return xmlHttp.responseText;
+    };
+
+    var previous_attr_text;
+    var attr_text = L.control.attribution({
+        position: 'bottomright',
+        prefix: '(c) 2018 HERE'
+    }).addTo(map);
+
+    function getURL(URL) {
+        return new Promise(function(resolve, reject) {
+            var req = new XMLHttpRequest();
+            req.open('GET', URL, true);
+            req.onload = function() {
+                if (req.status === 200) {
+                    resolve(req.responseText);
+                } else {
+                    reject(new Error(req.statusText));
+                }
+            };
+            req.onerror = function() {
+                reject(new Error(req.statusText));
+            };
+            req.send();
+        });
+    }
+    //var URL = "http://httpbin.org/get";
+
+
+
+    function get_copyright() {
+        var text;
+        var copyright_url = 'https://1.base.maps.cit.api.here.com/maptile/2.1/copyright/newest?app_id=' + he_appid + '&app_code=' + he_appcode;
+        getURL(copyright_url).then(function onFulfilled(value) {
+            var copyright_result = JSON.parse(value);
+            var map_type_normal = copyright_result['normal'];
+            var j;
+            for (j = 0; j < map_type_normal.length; j++) {
+                var copyright_contents = map_type_normal[j];
+                var copyright_contents_min_level = copyright_contents['minLevel'];
+                var copyright_contents_max_level = copyright_contents['maxLevel'];
+                var copyright_contents_label = copyright_contents['label'];
+                var copyright_contents_alt = copyright_contents['alt'];
+                var copyright_contents_boxes = copyright_contents['boxes'];
+                var k;
+                for (k = 0; k < copyright_contents_boxes.length; k++) {
+                    var box = copyright_contents_boxes[k];
+                    var box_corner_1 = L.latLng(parseFloat(box[0]), parseFloat(box[1]));
+                    var box_cornet_2 = L.latLng(parseFloat(box[2]), parseFloat(box[3]));
+                    ////console.log(L.latLngBounds(box_corner_1, box_cornet_2), map.getCenter())
+                    if (L.latLngBounds(box_corner_1, box_cornet_2).contains(map.getCenter()) && map.getZoom() >= copyright_contents_min_level && copyright_contents_max_level >= map.getZoom()) {
+                        ////console.log(true, copyright_contents_label);
+                        text = copyright_contents_label;
+                        console.log(text);
+                    }
+                }
+            }
+            previous_attr_text = text;
+            return text;
+        }).catch(function onRejected(error) {
+            return null;
+        });
+    };
+
+
+    var copyright_text = get_copyright();
+    var ggr_selected_group = L.featureGroup().addTo(map);
+    var ggr_marker_group = L.featureGroup().addTo(map);
+    var ggr_route_group = L.featureGroup().addTo(map)
+    var ggr_isoline_group = L.featureGroup().addTo(map);
+
+    var searched_lat_lon = map.getCenter();
+
+    var station_list;
+
+    function cle_refresh(radius) {
+        ////console.log(here_base_day.getAttribution());
+        attr_text.removeAttribution(previous_attr_text);
+
+        searched_radius = radius;
+        ggr_marker_group.clearLayers();
+
+        var map_bound = map.getBounds().getNorthWest();
+        var cle_url = 'https://cle.cit.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&layer_id=GGR_COVERAGE_180815';
+        getURL(cle_url).then(function onFulfilled(value) {
+            var r = JSON.parse(value);
+            station_list = r['geometries'];
+            var markers = [];
+            var i;
+            for (i = 0; i < station_list.length; i++) {
+                var attrib = station_list[i]['attributes'];
+                var isoline_geometry = station_list[i]['geometry'];
+                var id = attrib['ID'];
+                var name = attrib['NAME'];
+                var addr = attrib['ADDR'];
+                var latlon = attrib['LATLON'].split(',');
+                var popup_text = name + '<br/>' + addr;
+                var green = L.AwesomeMarkers.icon({
+                    markerColor: 'green',
+                    prefix: 'fa',
+                    icon: 'fa-plug'
+                });
+                markers[i] = new L.Marker(latlon, {
+                    cle_url: 'https://cle.cit.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&filter=ID === "' + id + '"&layer_id=GGR_COVERAGE_180815',
+                    icon: green,
+                    popup_text: popup_text,
+                });
+                markers[i].addTo(ggr_marker_group);
+                markers[i].on('click', markerOnClick);
+            };
+            attr_text.addAttribution(get_copyright()).addTo(map);
+        }).catch(function onRejected(error) {
+            console.error(error);
+        });
+    };
+
+    function markerOnClick(e) {
+        var r = JSON.parse(httpGet(this.options.cle_url));
+        var wkt = r['geometries'][0]['geometry'];
+        ggr_isoline_group.clearLayers();
+        var iso_wkt = omnivore.wkt.parse(wkt);
+        iso_wkt.addTo(ggr_isoline_group);
+        iso_wkt.on('click', function() {
+            ggr_isoline_group.clearLayers();
+            ggr_marker_group.eachLayer(function(layer) {
+                layer.setOpacity(1);
+            });
+        });
+        map.fitBounds(iso_wkt.getBounds());
+        var blue = L.AwesomeMarkers.icon({
+            markerColor: 'blue',
+            prefix: 'fa',
+            icon: 'fa-plug'
+        });
+        var latlon = this.getLatLng();
+        var popup_text = this.options.popup_text;
+        //console.log(popup_text);
+        ggr_selected_group.clearLayers();
+        var selected_marker = new L.Marker(latlon, {
+            icon: blue
+        }).bindPopup(popup_text).addTo(ggr_selected_group);
+        selected_marker.togglePopup();
+        ggr_marker_group.eachLayer(function(layer) {
+            layer.setOpacity(0.3);
+        });
+        selected_marker.on('click', selectedMarkerOnClick);
+    };
+
+    function selectedMarkerOnClick(e) {
+        ggr_marker_group.eachLayer(function(layer) {
+            layer.setOpacity(1);
+        });
+        ggr_selected_group.clearLayers();
+        ggr_isoline_group.clearLayers();
+    };
+
+
+    map.locate({
+        setView: true,
+        enableHighAccuracy: true
+    });
+    var c_marker = L.circleMarker(map.getCenter(), {
+        radius: 6,
+        color: '#ff80d5',
+        interactive: false
+    });
+    var circle = L.circle(map.getCenter(), 0, {
+        stroke: false,
+        color: '#4dffff',
+        interactive: false
+    });
+    var trace = null;
+
+    function onLocationFound(e) {
+        var radius = e.accuracy / 2;
+        if (trace == null) {
+            trace = L.polyline([map.getCenter()], {
+                color: '#99ccff',
+                opacity: 0.3
+            });
+        };
+        c_marker.addTo(map);
+        trace.addTo(map);
+        circle.addTo(map);
+        c_marker.setLatLng([e.latitude, e.longitude]);
+        circle.setLatLng([e.latitude, e.longitude]);
+        circle.setRadius(radius);
+        geocode_and_find_station(L.latLng([e.latitude, e.longitude]));
+    };
+
+    function onLocationError(e) {
+        alert(e.message);
+        c_marker.remove();
+        circle.remove();
+    };
+    map.on('locationfound', onLocationFound, onLocationError);
+
+    function clear_cle_results() {
+        ggr_marker_group.clearLayers();
+    };
+
+    function nearest_station_checker(input_loc) {
+        var gfe_url = 'https://cle.cit.api.here.com/2/search/proximity.json?layer_ids=GGR_COVERAGE_180815&proximity=' + input_loc.lat + ',' + input_loc.lng + '&app_id=' + he_appid + '&app_code=' + he_appcode;
+        var gfe_result = JSON.parse(httpGet(gfe_url));
+        var gfe_station_list = [];
+        if (gfe_result["geometries"].length > 0) {
+            for (i = 0; i < gfe_result["geometries"].length; i++) {
+                gfe_station_list.push(gfe_result["geometries"][i]["attributes"]);
+            }
+            var result_list = [];
+            for (i = 0; i < gfe_station_list.length; i++) {
+                var id = gfe_station_list[i]['ID'];
+                var name = gfe_station_list[i]['NAME'];
+                var addr = gfe_station_list[i]['ADDR'];
+                var station_latlon = L.latLng(gfe_station_list[i]['LATLON'].split(','));
+                var d = station_latlon.distanceTo(input_loc);
+                result_list.push([id, name, addr, station_latlon.lat + "," + station_latlon.lng, d]);
+            }
+
+            function sort_gfe_cunction(a, b) {
+                if (a[0] === b[0]) {
+                    return 0;
+                }
+                return (a[4] < b[4]) ? 1 : -1;
+            }
+            result_list.sort(sort_gfe_cunction).reverse();
+            //console.log(result_list);
+            var here_matrix_url = 'https://matrix.route.api.here.com/routing/7.2/calculatematrix.json?mode=fastest%3Bcar&app_id=' + he_appid + '&app_code=' + he_appcode + '&start0=' + input_loc.lat + '%2C' + input_loc.lng + '&consumptionmodel=default'
+            var candidate_list_length;
+            if (result_list.length > 5) {
+                candidate_list_length = 5
+            } else {
+                candidate_list_length = result_list.length
+            }
+            for (i = 0; i < candidate_list_length; i++) {
+                var dest_input = '&destination' + i + '=' + result_list[i][3].split(',')[0] + ',' + result_list[i][3].split(',')[1];
+                here_matrix_url += dest_input;
+            }
+            //console.log(here_matrix_url);
+            var matrix_result = JSON.parse(httpGet(here_matrix_url));
+            var closest_dest_list = [];
+            for (i = 0; i < matrix_result["response"]["matrixEntry"].length; i++) {
+                var matrix_entity = matrix_result["response"]["matrixEntry"][i];
+                var destination_index = matrix_result["response"]["matrixEntry"][i]["destinationIndex"];
+                var cost_factor = matrix_result["response"]["matrixEntry"][i]["summary"]["costFactor"];
+                closest_dest_list.push([destination_index, cost_factor]);
+            }
+
+            function sort_matrix_cunction(a, b) {
+                if (a[0] === b[0]) {
+                    return 0;
+                }
+                return (a[1] < b[1]) ? 1 : -1;
+            }
+            closest_dest_list.sort(sort_matrix_cunction).reverse();
+            var closest_dest_index = closest_dest_list[0][0];
+            var closest_dest = result_list[closest_dest_index];
+            var route_result = get_route(input_loc, L.latLng(closest_dest[3].split(',')));
+            ggr_marker_group.eachLayer(function(layer) {
+                layer.setOpacity(1);
+            });
+            ggr_selected_group.clearLayers();
+            ggr_isoline_group.clearLayers();
+            return [closest_dest, route_result];
+        } else {
+            ggr_route_group.clearLayers()
+            return null;
+        }
+
+    }
+
+    function get_route(ori, dest) {
+        var route_url = 'https://route.api.here.com/routing/7.2/calculateroute.json?';
+        var route_options = '&mode=fastest;car;traffic:enabled&departure=now&motorway=-4&language=zh-TW&routeattributes=sh&consumptionmodel=default';
+        var wp0 = ori.lat + "," + ori.lng;
+        var wp1 = dest.lat + "," + dest.lng;
+        var req_url = route_url + 'app_id=' + he_appid + '&app_code=' + he_appcode + '&waypoint0=geo!' + wp0 + '&waypoint1=geo!' + wp1 + route_options;
+        var r = JSON.parse(httpGet(req_url));
+        var sh = r["response"]["route"][0]["shape"];
+        var sh_array = [];
+        for (i = 0; i < sh.length; i++) {
+            sh_array.push(sh[i].split(','))
+        }
+        var text = r["response"]["route"][0]["summary"]["text"];
+        if (r) {
+            if (ggr_route_group.getLayers().length > 0) {
+                route_polyline.setLatLngs(sh_array);
+                var route_bound = L.latLngBounds();
+                route_bound.extend(route_polyline.getBounds());
+                map.fitBounds(route_bound);
+            } else {
+                route_polyline = L.polyline.antPath(sh_array, {
+                    delay: 1000
+                }).addTo(ggr_route_group);
+                var route_bound = L.latLngBounds();
+                route_bound.extend(route_polyline.getBounds());
+                map.fitBounds(route_bound);
+            }
+        }
+        return text;
+    }
+
+    function show_result(result){
+    	var home = L.AwesomeMarkers.icon({markerColor: 'red',icon: 'home'});
+    	var nearest_station_result = nearest_station_checker(result.center);
+                if (nearest_station_result) {
+                    var closest_station = nearest_station_result[0]; //[id, name, addr, station_latlon, d]
+                    var route_text = nearest_station_result[1];
+                    if (result) {
+                        var popup_text = "所在地：" + result.name + "<br/>距離最近的GoStation：" + closest_station[1] + "<br/>" + route_text + "<br/><a href=\"https://wego.here.com/directions/drive//" + closest_station[3] + "?normal&avoid=tollroad,boatFerry,motorway,railFerry,carHOV\" target=\"_blank\">使用HERE導航至目的地</a>";
+                        if (marker) {
+                            marker.setLatLng(result.center, {
+                                icon: home
+                            }).setPopupContent(popup_text).openPopup();
+                        } else {
+                            marker = L.marker(result.center, {
+                                icon: home
+                            }).bindPopup(popup_text, {}).addTo(map).openPopup();
+                        }
+                    }
+                } else {
+                    if (r) {
+                        if (marker) {
+                            marker.setLatLng(result.center, {
+                                icon: home
+                            }).setPopupContent("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").openPopup();
+                        } else {
+                            marker = L.marker(result.center, {
+                                icon: home
+                            }).bindPopup("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").addTo(map).openPopup();
+                        }
+                    }
+                }
+    }
+
+    function geocode_and_find_station(loc) {
+        geocoder.reverse(loc, map.options.crs.scale(map.getZoom()), function(results) {
+            if (results.length > 0) {
+                var r = results[0];
+            show_result(r);
+            }
+        })
+    }
+
+    var here_geocoder = L.Control.geocoder({
+    	geocoder: L.Control.Geocoder.here(),
+        defaultMarkGeocode: false,
+        position: 'topleft',
+        collapsed: false,
+        placeholder: 'Search Address to Find EV Station...',
+		    })
+		    .on('markgeocode', function(e) {
+		        show_result(e.geocode);
+		    })
+		    .addTo(map);
+
+    map.on('contextmenu', function(e) {
+        geocode_and_find_station(e.latlng);
+    })
+
+    var loc;
+
+    function loc_updater(lat, lon, radius, heading, speed) {
+        map.panTo([lat, lon]);
+        var epoch = new Date().getTime();
+        var trace_point = new L.circleMarker([lat, lon], {
+            radius: 6,
+            color: '#cca4d6',
+            interactive: false,
+            opacity: 0.3
+        }).addTo(map);
+        trace.addLatLng([lat, lon]);
+        circle.setLatLng([lat, lon]);
+        circle.setRadius(radius);
+    };
+    var animatedToggle = L.easyButton({
+        id: 'animated-marker-toggle',
+        position: 'topleft',
+        //type: 'animate',
+        states: [{
+            stateName: 'a',
+            icon: 'fa-location-arrow',
+            title: 'Start tracking position.',
+            onClick: function(control) {
+                control.state('b');
+                map.dragging.disable();
+                map.touchZoom.disable();
+                map.scrollWheelZoom.disable();
+                map.boxZoom.disable();
+                map.doubleClickZoom.disable();
+                //log_saver.enable();
+                //console.log('Position tracking started!')
+                map.locate({
+                    setView: true,
+                    watch: true,
+                    enableHighAccuracy: true,
+                    timeout: 60000,
+                    maximumAge: 0,
+                    animate: true
+                });
+                loc = navigator.geolocation.watchPosition(function(position) {
+                    loc_updater(position.coords.latitude, position.coords.longitude, position.coords.accuracy / 2, position.coords.heading, position.coords.speed);
+                });
+            }
+        }, {
+            stateName: 'b',
+            title: 'Stop tracking position.',
+            icon: 'fa-lock',
+            onClick: function(control) {
+                map.stopLocate();
+                map.dragging.enable();
+                map.touchZoom.enable();
+                map.scrollWheelZoom.enable();
+                map.boxZoom.enable();
+                map.doubleClickZoom.enable();
+                control.state('a');
+                //console.log('Position tracking ended!');
+                navigator.geolocation.clearWatch(loc);
+            }
+        }]
+    });
+    animatedToggle.addTo(map);
+
+
+    if (ggr_marker_group.getLayers().length == 0) {
+        cle_refresh();
+    };
+
+
+    var layer_con = {
+        base_layers: {
+            "HERE Base Map": here_maptile,
+        },
+        overlays: {
+            "GoStation": ggr_marker_group,
+        }
+    };
+    L.control.layers(
+        layer_con.base_layers,
+        layer_con.overlays, {
+            position: 'topright',
+            collapsed: true,
+            autoZIndex: true,
+            //hideSingleBase: true
+        }
+    ).addTo(map);
+
+    L.control.scale({
+        position: 'bottomleft'
+    }).addTo(map);
+</script>
