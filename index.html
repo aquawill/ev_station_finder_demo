@@ -455,7 +455,7 @@
 	geocode_box = L.control({position: 'topleft'});
 	geocode_box.onAdd = function(map) {
 	    this._div = L.DomUtil.create('div', 'geocode_box');
-	    this._div.innerHTML = '<input type="text" style="font-size:14px" placeholder="Search Address..." maxlength="50" size="40"/>';
+	    this._div.innerHTML = '<input type="text" style="font-size:16px" placeholder="Search Address..." maxlength="50" size="30"/>';
 	    //this._div.innerHTML += '<button onclick="here_geocoder()" type="button">Submit</button>';
 	    return this._div;
 	}
