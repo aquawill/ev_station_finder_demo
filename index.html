@@ -465,14 +465,12 @@
 	function controlEnter(e) {
 	    map.dragging.disable();
 	    map.touchZoom.disable();
-	    map.tap.disable();
 	    map.doubleClickZoom.disable();
 	    map.scrollWheelZoom.disable();
 	}
 	function controlLeave() {
 	    map.dragging.enable();
 	    map.touchZoom.enable();
-	    map.tap.enable();
 	    map.doubleClickZoom.enable();
 	    map.scrollWheelZoom.enable();
 	}
@@ -483,7 +481,7 @@
 	for (var i = 0; i < inputTags.length; i++) {
 	    inputTags[i].onmouseover = controlEnter;
 	    inputTags[i].onmouseout = controlLeave;
-	    inputTags[i].touchstart = controlEnter;
+	    inputTags[i].touchstart = document.getElementsByTagName("input")[0].focus();
 	    inputTags[i].touchend = controlLeave;
 	}
 	document.getElementsByTagName("input")[0].onkeypress=function(e){
@@ -491,6 +489,7 @@
 		        here_geocoder();
 		    }
 		}
+
 
 
 	function here_geocoder(){
