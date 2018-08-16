@@ -483,6 +483,8 @@
 	for (var i = 0; i < inputTags.length; i++) {
 	    inputTags[i].onmouseover = controlEnter;
 	    inputTags[i].onmouseout = controlLeave;
+	    inputTags[i].touchstart = controlEnter;
+	    inputTags[i].touchend = controlLeave;
 	}
 	document.getElementsByTagName("input")[0].onkeypress=function(e){
 		    if(e.keyCode==13){
