@@ -21,8 +21,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" />
     <link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css" />
-    <link rel="stylesheet" href="./dist/Control.Geocoder.css" />
-    <script src="./dist/Control.Geocoder.js">
     </script>
     <script src="./leaflet.bouncemarker/bouncemarker.js">
     </script>
@@ -73,10 +71,12 @@
             attributionControl: false,
             crs: L.CRS.EPSG3857,
             minZoom: 10,
-            loadingControl: true
+            //loadingControl: true,
+            zoomControl: false,
         }).fitWorld().setView([25.02634, 121.53477], 15),
-        geocoder = L.Control.Geocoder.here(),
         marker;
+    
+
 
     var hash = new L.Hash(map);
     var here_maptile = L.tileLayer(
@@ -140,11 +140,8 @@
                     var box = copyright_contents_boxes[k];
                     var box_corner_1 = L.latLng(parseFloat(box[0]), parseFloat(box[1]));
                     var box_cornet_2 = L.latLng(parseFloat(box[2]), parseFloat(box[3]));
-                    ////console.log(L.latLngBounds(box_corner_1, box_cornet_2), map.getCenter())
                     if (L.latLngBounds(box_corner_1, box_cornet_2).contains(map.getCenter()) && map.getZoom() >= copyright_contents_min_level && copyright_contents_max_level >= map.getZoom()) {
-                        ////console.log(true, copyright_contents_label);
                         text = copyright_contents_label;
-                        console.log(text);
                     }
                 }
             }
@@ -161,13 +158,12 @@
     var ggr_marker_group = L.featureGroup().addTo(map);
     var ggr_route_group = L.featureGroup().addTo(map)
     var ggr_isoline_group = L.featureGroup().addTo(map);
-
+    
     var searched_lat_lon = map.getCenter();
 
     var station_list;
 
     function cle_refresh(radius) {
-        ////console.log(here_base_day.getAttribution());
         attr_text.removeAttribution(previous_attr_text);
 
         searched_radius = radius;
@@ -201,7 +197,7 @@
                 markers[i].addTo(ggr_marker_group);
                 markers[i].on('click', markerOnClick);
             };
-            attr_text.addAttribution(get_copyright()).addTo(map);
+            //attr_text.addAttribution(get_copyright()).addTo(map);
         }).catch(function onRejected(error) {
             console.error(error);
         });
@@ -227,7 +223,6 @@
         });
         var latlon = this.getLatLng();
         var popup_text = this.options.popup_text;
-        //console.log(popup_text);
         ggr_selected_group.clearLayers();
         var selected_marker = new L.Marker(latlon, {
             icon: blue
@@ -293,7 +288,7 @@
     };
 
     function nearest_station_checker(input_loc) {
-        var gfe_url = 'https://cle.cit.api.here.com/2/search/proximity.json?layer_ids=GGR_COVERAGE_180815&proximity=' + input_loc.lat + ',' + input_loc.lng + '&app_id=' + he_appid + '&app_code=' + he_appcode;
+    	var gfe_url = 'https://cle.cit.api.here.com/2/search/proximity.json?layer_ids=GGR_COVERAGE_180815&proximity=' + input_loc.lat + ',' + input_loc.lng + '&app_id=' + he_appid + '&app_code=' + he_appcode;
         var gfe_result = JSON.parse(httpGet(gfe_url));
         var gfe_station_list = [];
         if (gfe_result["geometries"].length > 0) {
@@ -317,7 +312,6 @@
                 return (a[4] < b[4]) ? 1 : -1;
             }
             result_list.sort(sort_gfe_cunction).reverse();
-            //console.log(result_list);
             var here_matrix_url = 'https://matrix.route.api.here.com/routing/7.2/calculatematrix.json?mode=fastest;car;traffic:enabled;motorway:-3&app_id=' + he_appid + '&app_code=' + he_appcode + '&start0=' + input_loc.lat + '%2C' + input_loc.lng + '&consumptionmodel=default'
             var candidate_list_length;
             if (result_list.length > 5) {
@@ -329,10 +323,8 @@
                 var dest_input = '&destination' + i + '=' + result_list[i][3].split(',')[0] + ',' + result_list[i][3].split(',')[1];
                 here_matrix_url += dest_input;
             }
-            //console.log(here_matrix_url);
             var matrix_result = JSON.parse(httpGet(here_matrix_url));
             var closest_dest_list = [];
-            console.log(matrix_result["response"]["matrixEntry"]);
             for (i = 0; i < matrix_result["response"]["matrixEntry"].length; i++) {
                 var matrix_entity = matrix_result["response"]["matrixEntry"][i];
                 var destination_index = matrix_result["response"]["matrixEntry"][i]["destinationIndex"];
@@ -394,62 +386,119 @@
         return text;
     }
 
-    function show_result(result) {
+    function show_result(input_latlon, input_name) {
         var home = L.AwesomeMarkers.icon({
             markerColor: 'red',
             icon: 'home'
         });
-        var nearest_station_result = nearest_station_checker(result.center);
+        var nearest_station_result = nearest_station_checker(input_latlon);
         if (nearest_station_result) {
             var closest_station = nearest_station_result[0]; //[id, name, addr, station_latlon, d]
             var route_text = nearest_station_result[1];
-            if (result) {
-                var popup_text = "所在地：" + result.name + "<br/>距離最近的GoStation：" + closest_station[1] + "<br/>" + route_text + "<br/><a href=\"https://wego.here.com/location/?map=" + closest_station[3] + ",15,&msg=" + closest_station[1] + "\" target=\"_blank\">使用HERE導航至目的地</a>";
+            if (input_latlon) {
+                var popup_text = "所在地：" + input_name + "<br/>距離最近的GoStation：" + closest_station[1] + "<br/>" + route_text + "<br/><a href=\"https://wego.here.com/location/?map=" + closest_station[3] + ",15,&msg=" + closest_station[1] + "\" target=\"_blank\">使用HERE導航至目的地</a>";
                 if (marker) {
-                    marker.setLatLng(result.center, {
+                    marker.setLatLng(input_latlon, {
                         icon: home
                     }).setPopupContent(popup_text).openPopup();
                 } else {
-                    marker = L.marker(result.center, {
+                    marker = L.marker(input_latlon, {
                         icon: home
                     }).bindPopup(popup_text, {}).addTo(map).openPopup();
                 }
             }
         } else {
-            if (result) {
+            if (input_latlon) {
                 if (marker) {
-                    marker.setLatLng(result.center, {
+                    marker.setLatLng(input_latlon, {
                         icon: home
-                    }).setPopupContent("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").openPopup();
+                    }).setPopupContent("所在地：" + input_name + "<br/>此地點不在GoStation的服務範圍內！").openPopup();
                 } else {
-                    marker = L.marker(result.center, {
+                    marker = L.marker(input_latlon, {
                         icon: home
-                    }).bindPopup("所在地：" + result.name + "<br/>此地點不在GoStation的服務範圍內！").addTo(map).openPopup();
+                    }).bindPopup("所在地：" + input_name + "<br/>此地點不在GoStation的服務範圍內！").addTo(map).openPopup();
                 }
             }
         }
     }
 
-    function geocode_and_find_station(loc) {
-        geocoder.reverse(loc, map.options.crs.scale(map.getZoom()), function(results) {
-            if (results.length > 0) {
-                var r = results[0];
-                show_result(r);
-            }
-        })
+    function here_geocoder_api_parser(value){
+    	r = JSON.parse(value);
+    	if (r["Response"]["View"].length > 0){
+    		var result_display_location_lat = r["Response"]["View"]["0"]["Result"][0]["Location"]["DisplayPosition"]["Latitude"];
+	        var result_display_location_lon = r["Response"]["View"]["0"]["Result"][0]["Location"]["DisplayPosition"]["Longitude"];
+	        var result_display_location_latlon = L.latLng([result_display_location_lat, result_display_location_lon]);
+	        var result_navigaion_location_lat = r["Response"]["View"]["0"]['Result'][0]['Location']['NavigationPosition'][0]['Latitude'];
+	        var result_navigaion_location_lon = r["Response"]["View"]["0"]['Result'][0]['Location']['NavigationPosition'][0]['Longitude'];
+	        var result_navigaion_location_latlon = L.latLng([result_navigaion_location_lat, result_navigaion_location_lon]);
+	        var result_address_label = r["Response"]["View"]["0"]["Result"][0]["Location"]["Address"]["Label"];
+	        return [result_navigaion_location_latlon, result_address_label]
+    	}else{
+    		map.openPopup("Please input a valid address!", map.getCenter(), {keepInView:true,})
+    	}
     }
 
-    var here_geocoder = L.Control.geocoder({
-            geocoder: L.Control.Geocoder.here(),
-            defaultMarkGeocode: false,
-            position: 'topleft',
-            //collapsed: false,
-            placeholder: 'Search Address to Find EV Station...',
-        })
-        .on('markgeocode', function(e) {
-            show_result(e.geocode);
-        })
-        .addTo(map);
+    function geocode_and_find_station(loc) {
+    	var lat = loc.lat;
+    	var lon = loc.lng;
+    	var here_rev_geocode_url = 'https://reverse.geocoder.api.here.com/6.2/reversegeocode.json?prox=' + lat + ',' + lon + ',250&mode=retrieveAddresses&maxresults=1&gen=9&app_id=' + he_appid + ' &app_code=' + he_appcode;
+    	getURL(here_rev_geocode_url).then(function onFulfilled(value) {
+	        var result_latlon = here_geocoder_api_parser(value)[0]
+	        var result_name = here_geocoder_api_parser(value)[1]
+	        show_result(result_latlon, result_name);
+	    }).catch(function onRejected(error) {
+	        console.error(error);
+	    });
+    }
+
+    //Create control
+	geocode_box = L.control({position: 'topleft'});
+	geocode_box.onAdd = function(map) {
+	    this._div = L.DomUtil.create('div', 'geocode_box');
+	    this._div.innerHTML = '<input type="text" style="font-size:14px" placeholder="Search Address..." maxlength="50" size="40"/>';
+	    //this._div.innerHTML += '<button onclick="here_geocoder()" type="button">Submit</button>';
+	    return this._div;
+	}
+	geocode_box.addTo(map);
+
+	//Functions to either disable (onmouseover) or enable (onmouseout) the map's dragging
+	function controlEnter(e) {
+	    map.dragging.disable();
+	    map.doubleClickZoom.disable();
+	    map.scrollWheelZoom.disable();
+	}
+	function controlLeave() {
+	    map.dragging.enable();
+	    map.doubleClickZoom.enable();
+	    map.scrollWheelZoom.enable();
+	}
+
+	//Quick application to all input tags
+	///*
+	var inputTags = document.getElementsByTagName("input")
+	for (var i = 0; i < inputTags.length; i++) {
+	    inputTags[i].onmouseover = controlEnter;
+	    inputTags[i].onmouseout = controlLeave;
+	}
+	document.getElementsByTagName("input")[0].onkeypress=function(e){
+		    if(e.keyCode==13){
+		        here_geocoder();
+		    }
+		}
+
+
+	function here_geocoder(){
+		user_input_string = document.getElementsByTagName("input")[0]["value"];
+		geocode_url = 'https://geocoder.api.here.com/6.2/geocode.json?searchtext=' + user_input_string + '&app_id=' + he_appid + '&app_code=' + he_appcode;
+		getURL(geocode_url).then(function onFulfilled(value) {
+			var result_latlon = here_geocoder_api_parser(value)[0]
+	        var result_name = here_geocoder_api_parser(value)[1]
+	        show_result(result_latlon, result_name);
+        }).catch(function onRejected(error) {
+            console.error(error);
+        });
+	}
+
 
     map.on('contextmenu', function(e) {
         geocode_and_find_station(e.latlng);
@@ -548,7 +597,7 @@
         }
     ).addTo(map);
 
-    L.control.scale({
-        position: 'bottomleft'
-    }).addTo(map);
+    L.control.scale({position: 'bottomleft',}).addTo(map);
+
+    L.control.zoom({position:'bottomright',}).addTo(map);
 </script>
