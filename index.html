@@ -464,12 +464,14 @@
 	//Functions to either disable (onmouseover) or enable (onmouseout) the map's dragging
 	function controlEnter(e) {
 	    map.dragging.disable();
+	    map.touchZoom.disable();
 	    map.tap.disable();
 	    map.doubleClickZoom.disable();
 	    map.scrollWheelZoom.disable();
 	}
 	function controlLeave() {
 	    map.dragging.enable();
+	    map.touchZoom.enable();
 	    map.tap.enable();
 	    map.doubleClickZoom.enable();
 	    map.scrollWheelZoom.enable();
