@@ -63,8 +63,8 @@
 <script>
     var bounds = null;
 
-    var he_appid = 'JDuZcEECeUBXGkFT6zp9';
-    var he_appcode = 'pTa6-IjR6ElKf0kjAolO2A';
+    var he_appid = 'MdgrnOU2OsdYuPbPNz2t';
+    var he_appcode = 'jeXznopbGvE8KRhVK3wkMw';
 
     var map = L.map('map', {
             keyboard: true,
@@ -172,7 +172,7 @@
         ggr_marker_group.clearLayers();
 
         var map_bound = map.getBounds().getNorthWest();
-        var cle_url = 'https://cle.cit.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&layer_id=GGR_COVERAGE_180815';
+        var cle_url = 'https://cle.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&layer_id=GGR';
         getURL(cle_url).then(function onFulfilled(value) {
             var r = JSON.parse(value);
             station_list = r['geometries'];
@@ -192,7 +192,7 @@
                     icon: 'fa-plug'
                 });
                 markers[i] = new L.Marker(latlon, {
-                    cle_url: 'https://cle.cit.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&filter=ID === "' + id + '"&layer_id=GGR_COVERAGE_180815',
+                    cle_url: 'https://cle.api.here.com/2/search/all.json?app_id=' + he_appid + '&app_code=' + he_appcode + '&filter=ID === "' + id + '"&layer_id=GGR',
                     icon: green,
                     popup_text: popup_text,
                 });
@@ -290,7 +290,7 @@
     };
 
     function nearest_station_checker(input_loc) {
-        var gfe_url = 'https://cle.cit.api.here.com/2/search/proximity.json?layer_ids=GGR_COVERAGE_180815&proximity=' + input_loc.lat + ',' + input_loc.lng + '&app_id=' + he_appid + '&app_code=' + he_appcode;
+        var gfe_url = 'https://cle.api.here.com/2/search/proximity.json?layer_ids=GGR&proximity=' + input_loc.lat + ',' + input_loc.lng + '&app_id=' + he_appid + '&app_code=' + he_appcode;
         var gfe_result = JSON.parse(httpGet(gfe_url));
         var gfe_station_list = [];
         if (gfe_result["geometries"].length > 0) {
